@@ -1,6 +1,6 @@
 [project]
 name = "exowindows"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fast, distributed ML scaling on Windows. Connect computers over Ethernet, Wi-Fi, USB-C, or Thunderbolt."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,6 +11,23 @@ dependencies = [
   "httpx>=0.27.0",
   "psutil>=6.0.0",
   "wmi>=1.5.1; sys_platform == 'win32'",
+  "loguru>=0.7.3",
+  "pydantic>=2.11.7",
+  "msgspec>=0.19.0",
+  "anyio>=4.0.0",
+  "rustworkx>=0.17.1",
+  "aiofiles>=24.1.0",
+  "aiohttp>=3.12.14",
+  "fastapi>=0.116.1",
+  "filelock>=3.18.0",
+  "huggingface-hub>=1.8.0",
+  "tiktoken>=0.12.0",
+  "hypercorn>=0.18.0",
+  "openai-harmony>=0.0.8",
+  "tomlkit>=0.14.0",
+  "python-multipart>=0.0.21",
+  "zstandard>=0.23.0",
+  "transformers>=5.6.2",
 ]
 
 [project.optional-dependencies]
