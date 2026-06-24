@@ -1,0 +1,29 @@
+[project]
+name = "exowindows"
+version = "0.1.0"
+description = "Fast, distributed ML scaling on Windows. Connect computers over Ethernet, Wi-Fi, USB-C, or Thunderbolt."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+  "click>=8.1.0",
+  "rich>=13.0.0",
+  "httpx>=0.27.0",
+  "psutil>=6.0.0",
+  "wmi>=1.5.1; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+torch = ["torch>=2.0.0"]
+
+[project.scripts]
+exowindows = "exowindows.cli:cli"
+exowindows-node = "exowindows.cli:node_cli"
+exowindows-ollama = "exowindows.cli:ollama_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/exowindows"]
