@@ -11,7 +11,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: exowindows
       url: https://pypi.org/p/exowindows
     permissions:
       id-token: write  # Mandatory for trusted publishing
