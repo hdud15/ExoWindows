@@ -1,6 +1,6 @@
 [project]
 name = "exowindows"
-version = "0.1.1"
+version = "0.1.2"
 description = "Fast, distributed ML scaling on Windows. Connect computers over Ethernet, Wi-Fi, USB-C, or Thunderbolt."
 readme = "README.md"
 requires-python = ">=3.11"
