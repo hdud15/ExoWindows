@@ -18,6 +18,9 @@ class DeviceCapabilities:
     gpu_model: Optional[str] = None
     gpu_vram_gb: Optional[float] = None
     gpu_shared_vram_gb: Optional[float] = None
+    npu_model: Optional[str] = None
+    npu_tops: Optional[float] = None
+    npu_memory_gb: Optional[float] = None
 
 def get_cpu_model() -> str:
     """Retrieve cpu model name."""
@@ -117,12 +120,33 @@ def get_gpu_info() -> tuple[Optional[str], Optional[float], Optional[float]]:
 
     return gpu_model, gpu_vram_gb, gpu_shared_vram_gb
 
+
+def get_npu_info() -> tuple[Optional[str], Optional[float], Optional[float]]:
+    """Best-effort NPU detection. TOPS/memory are vendor-specific and may be unknown."""
+    if platform.system() != "Windows":
+        return None, None, None
+    try:
+        import wmi
+        w = wmi.WMI()
+        candidates = []
+        for entity in w.Win32_PnPEntity():
+            name = getattr(entity, "Name", None) or ""
+            lower = name.lower()
+            if any(token in lower for token in ("npu", "neural", "ai boost", "hexagon", "ryzen ai")):
+                candidates.append(name)
+        if candidates:
+            return candidates[0], None, None
+    except Exception:
+        pass
+    return None, None, None
+
 def get_local_capabilities() -> DeviceCapabilities:
     """Retrieve capabilities of the local host."""
     ram_speed = get_ram_speed_mhz()
     qualified = is_qualified_ram(ram_speed)
     system_ram_gb = round(psutil.virtual_memory().total / (1024 ** 3), 2)
     gpu_model, gpu_vram, gpu_shared = get_gpu_info()
+    npu_model, npu_tops, npu_memory = get_npu_info()
 
     return DeviceCapabilities(
         node_name=platform.node(),
@@ -135,4 +159,7 @@ def get_local_capabilities() -> DeviceCapabilities:
         gpu_model=gpu_model,
         gpu_vram_gb=gpu_vram,
         gpu_shared_vram_gb=gpu_shared,
+        npu_model=npu_model,
+        npu_tops=npu_tops,
+        npu_memory_gb=npu_memory,
     )

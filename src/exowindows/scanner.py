@@ -69,6 +69,30 @@ def get_subnets_to_scan() -> List[str]:
             pass
     return subnets
 
+
+def _connection_for_ip(ip: str) -> Dict[str, Any]:
+    try:
+        target = ipaddress.ip_address(ip)
+        best = None
+        best_prefix = -1
+        for iface in get_interfaces(include_loopback=False):
+            try:
+                network = ipaddress.ip_interface(f"{iface.ip_address}/24").network
+            except Exception:
+                continue
+            if target in network and network.prefixlen > best_prefix:
+                best = iface
+                best_prefix = network.prefixlen
+        if best:
+            return {
+                "connection_type": best.interface_type.display_name(),
+                "connection_speed_mbps": best.speed_mbps,
+                "local_interface_ip": best.ip_address,
+            }
+    except Exception:
+        pass
+    return {}
+
 async def scan_subnet_for_port(subnet_str: str, port: int) -> List[str]:
     """Scan all IPs in a /24 subnet for a specific open port."""
     try:
@@ -136,10 +160,11 @@ async def scan_for_nodes(timeout_seconds: float = 3.0) -> Dict[str, Any]:
     for ip, caps in zip(peer_tasks.keys(), peer_results):
         if caps and not isinstance(caps, Exception):
             caps["ip"] = ip
+            caps.update(_connection_for_ip(ip))
             exo_nodes.append(caps)
         elif not isinstance(caps, Exception):
             # Fallback placeholder if capability endpoint isn't fully detailed
-            exo_nodes.append({
+            fallback = {
                 "ip": ip,
                 "node_name": f"Node-{ip.split('.')[-1]}",
                 "gpu_model": "Detected GPU",
@@ -147,7 +172,9 @@ async def scan_for_nodes(timeout_seconds: float = 3.0) -> Dict[str, Any]:
                 "system_ram_gb": 16.0,
                 "ram_speed_mhz": 3200,
                 "is_ram_qualified": True
-            })
+            }
+            fallback.update(_connection_for_ip(ip))
+            exo_nodes.append(fallback)
 
     # Also try querying active cluster from localhost if it exists
     try:

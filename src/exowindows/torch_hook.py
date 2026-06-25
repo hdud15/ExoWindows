@@ -3,6 +3,7 @@ import sys
 import time
 import asyncio
 import subprocess
+from dataclasses import asdict
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 from rich.console import Console
@@ -126,8 +127,15 @@ def show_recommendation_box(local_caps: Dict[str, Any], remote_nodes: List[Dict[
     for r in remote_nodes:
         node_name = r.get("node_name", "Remote Node")
         ip = r.get("ip", "Unknown IP")
-        gpu = r.get("gpu_model", "CPU Only")
-        vram = f"{r.get('gpu_vram_gb')}GB VRAM" if r.get("gpu_vram_gb") else "System RAM"
+        gpu = r.get("gpu_model") or r.get("npu_model") or "CPU Only"
+        if r.get("gpu_vram_gb"):
+            vram = f"{r.get('gpu_vram_gb')}GB dedicated VRAM"
+        elif r.get("gpu_shared_vram_gb"):
+            vram = f"{r.get('gpu_shared_vram_gb')}GB shared VRAM"
+        elif r.get("npu_tops"):
+            vram = f"{r.get('npu_tops')} TOPS NPU"
+        else:
+            vram = "System RAM"
         conn = r.get("connection_type", "Ethernet")
         node_lines.append(f"  - [cyan]{node_name:<12}[/cyan] [{ip:<14}]  {gpu} ({vram}) via {conn}")
         
@@ -171,7 +179,7 @@ def start_distributed_cluster(local_caps: Dict[str, Any], remote_nodes: List[Dic
     try:
         # Check if local daemon is running on port 52415
         import httpx
-        r = httpx.get(f"http://127.0.0.1:52415/node_id", timeout=1.0)
+        r = httpx.get("http://127.0.0.1:52415/node_id", timeout=1.0)
         if r.status_code == 200:
             console.print("  [dim]Local exo daemon is already running.[/dim]")
             return

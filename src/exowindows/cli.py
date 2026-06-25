@@ -223,8 +223,16 @@ def benchmark():
 @click.command(context_settings={"ignore_unknown_options": True, "allow_extra_args": True})
 @click.option("--host", "-H", default=None, help="Host IP address to connect to.")
 @click.option("--api-port", default=52415, type=int, help="Host API port.")
+@click.option(
+    "--connection",
+    type=click.Choice(["auto", "wifi", "ethernet", "usb", "usb-c", "usb-ethernet", "thunderbolt"], case_sensitive=False),
+    default="auto",
+    show_default=True,
+    help="Preferred connection method.",
+)
+@click.option("--interface-ip", default=None, help="Manually pin the local interface IP.")
 @click.pass_context
-def node_cli(ctx, host, api_port):
+def node_cli(ctx, host, api_port, connection, interface_ip):
     """Worker node client. Join a cluster automatically."""
     ensure_exo_installed(host, api_port)
     
@@ -251,6 +259,11 @@ def node_cli(ctx, host, api_port):
         
     if host and "join" in filtered_args and "--host" not in filtered_args and "-H" not in filtered_args:
         filtered_args.extend(["--host", host])
+    if "join" in filtered_args:
+        if "--connection" not in filtered_args:
+            filtered_args.extend(["--connection", connection])
+        if interface_ip and "--interface-ip" not in filtered_args:
+            filtered_args.extend(["--interface-ip", interface_ip])
         
     try:
         exo_node_cli(filtered_args)

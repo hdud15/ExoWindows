@@ -7,6 +7,7 @@ from __future__ import annotations
 import platform
 import socket
 import subprocess
+import os
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Optional
@@ -33,6 +34,27 @@ class InterfaceType(Enum):
         }[self]
 
     def priority(self) -> int:
+        order = os.getenv("EXO_CONNECTION_PRIORITY", "wifi,thunderbolt,usb_c,ethernet,usb_ethernet,unknown").lower()
+        aliases = {
+            "thunderbolt": InterfaceType.THUNDERBOLT,
+            "tb": InterfaceType.THUNDERBOLT,
+            "usb_c": InterfaceType.USB_C_HIGH_SPEED,
+            "usbc": InterfaceType.USB_C_HIGH_SPEED,
+            "usb": InterfaceType.USB_C_HIGH_SPEED,
+            "usb_ethernet": InterfaceType.USB_ETHERNET,
+            "usb-ethernet": InterfaceType.USB_ETHERNET,
+            "ethernet": InterfaceType.ETHERNET,
+            "wifi": InterfaceType.WIFI,
+            "wi-fi": InterfaceType.WIFI,
+            "wireless": InterfaceType.WIFI,
+            "unknown": InterfaceType.UNKNOWN,
+        }
+        preferred: dict[InterfaceType, int] = {}
+        for index, item in enumerate(part.strip() for part in order.split(",")):
+            if item in aliases and aliases[item] not in preferred:
+                preferred[aliases[item]] = index
+        if self in preferred:
+            return preferred[self]
         return {
             InterfaceType.THUNDERBOLT: 0,
             InterfaceType.USB_C_HIGH_SPEED: 1,
@@ -230,4 +252,3 @@ def print_interfaces() -> None:
     if best:
         b = best[0]
         console.print(f"\n[bold green][OK] Recommended:[/bold green] {b.interface_type.display_name()} - {b.ip_address}")
-
